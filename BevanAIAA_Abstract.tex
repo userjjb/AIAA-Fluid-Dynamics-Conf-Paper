@@ -52,6 +52,7 @@
 \usepackage{amsmath}								%For mathematical typesetting
 \usepackage{amssymb}								%For mathematical typesetting
 \usepackage{listings}								%Code formatting
+\usepackage{wrapfig}
 
  \title{A High-order Conservative Eulerian Simulation Method for Vortex Dominated Flows}
 
@@ -195,8 +196,12 @@ We solve the PDE ``line-wise''; we form the tensor product of the chosen 1D inte
 \be \frac{\partial \omega_{st}}{\partial t} = (\frac{\partial \omega_{st}}{\partial t})_{x-line} + (\frac{\partial \omega_{st}}{\partial t})_{y-line} \ee
 
 %============================================================
-\section{Implementation}
+\section{Implementation Details}
+Notable implementation details are presented here. A comprehensive overview of all implementation details can be found in the thesis\cite{Bevan} upon which this paper is based.
+
 \subsection{Solver Overview}
+An outline of the solver is useful for understanding the general programmatic flow. Several items in this program outline will be discussed in greater detail.
+
 \begin{lstlisting}[language=Matlab]
 Define problem parameters
 Define solver parameters
@@ -239,53 +244,98 @@ The other diagnostic considered is the effective aspect ratio \cite{Koum1997}. T
 \be \lambda_{eff}^2 = \frac{J+R}{J-R} \ee
 where $J=J_{20}+J_{02}$, $D=J_{20}-J_{02}$, and $R^2=D^2+4J_{11}^2$.
 
-\subsection{Discrete $L^2$ error}
-It is possible to calculate the $L^2$ error of the solution approximation $v$ compared to an analytical solution or some other approximation, $u$ via:
-\be ||u-v||_2 = \sqrt{\int (u-v)^2 \; dx} \ee
-A discrete version needs to perform numerical quadrature to calculate the integral of the error. In situations where the calculated error is obtainable at the solution points, we have ready-made quadrature points that we can collocate such that we obtain the discrete form:
-\be ||u-v||_2 = \sqrt{[w_i]^T(u_{ij}-v_{ij})^2[w_j]} \ee
-where $w_i$ and $w_j$ are the appropriate quadrature weights associated with each direction of the tensor product of quadrature points, and $u_{ij}$ and $v_{ij}$ are the values at the interpolation nodes. If two tests do not share a common set of solution points, we interpolate the results to a shared set of equispaced points and calculate the error by:
-\be ||u-v|| =\sqrt{\frac{1}{M\times N} \sum_{i=1}^M \sum_{j=1}^N (u_{ij}-v_{ij})^2 }\ee
+\subsection{Vorticity Sparseness}
+One of the advantages of DG as an advection scheme is the compact local support. This means that for a large domain with only sparse vorticity one should be able to only consider those elements that contain vorticity. The sparseness can be applied in several ways. From the DG perspective, if an element is empty than there is nothing to advect and the element can be omitted from the evaluation entirely. The reality is that even small numerical errors in the boundary flux may lead to non-physical perturbations in the vorticity field in what should be otherwise empty elements. These elements can no longer be ignored, lest some instability result from improperly handling non-zero elements.
+
+From a vorticity-velocity perspective elements with zero vorticity or boundary flux driven ``noise'' are unimportant, even if they are important from a consistency standpoint for the DG part of the code. Therefore a threshold value can be specified, elements with total vorticity less that the threshold value are ignored, and only those elements above the threshold are put in a mask. The masked elements are the ones considered as sources for the velocity evaluation. Additionally, only the boundary velocities for these unimportant elements are calculated and a reduced velocity order stiffness term is calculated for them.
+
+\subsection{Explicit Time-Stepping}\label{TimeStep}
+An explicit time-stepping method is used for the time discretization of the semi-discrete system. The two chief categories are multi-step and multi-stage methods, typically either Adams-Bashforth or Runge-Kutta respectively. It is known that Forward Euler and AB2 are unstable for DG with an upwind flux due to it's dissipative nature \cite{Reid}. The choices permitted then are Runge-Kutta or a higher-order Adams-Bashforth.
+
+The recent thesis work of Atcheson \cite{Reid} presents a comprehensive overview of the optimal choice of time-stepping algorithm for a DG operator. In particular it was shown that Runge-Kutta methods outperformed AB3 and that all higher-order Adams-Bashforth schemes required far too restrictive of a time-step to satisfy the CFL condition to be efficient. Out of all the Runge-Kutta schemes considered one of the more competitive options was the ``NRK14C'' scheme developed by Niegemann et al. \cite{Niegemann}. This is an optimized 4th order, 14 stage low storage scheme. This choice of method permits a larger stable time step for proportionally less computational work.
 
 %============================================================
 \section{Results}
 
-In this section we will introduce some figures and tables.
-It can be seen in figure~\ref{f:magnetic_field} that magnetization is a
-function of applied field.
-\begin{figure}[htb]% order of placement preference: here, top, bottom
- \includegraphics{figure_magnet}
- \caption{Magnetization as a function of applied field, which has
-   borders so thick that they overwhelm the data and for some reason the
-   ordinate label is rotated 90 degrees to make it difficult to
-   read. This figure also demonstrates the dangers of using a bitmap
-   as opposed to a vector image.}
- \label{f:magnetic_field}
+\subsection{Perlmann: Stationary Vortex}
+Perlmann's 7th order polynomial  \cite{Perlmann1985} was the first case studied. The intial condition is a stationary vortex that permits an analytical solution to compare against. The initial vorticity distribution is of the form:
+\ben{PerlW} \omega(z)=(1-|z|^2)^7, \; |z|\leq 1  \quad \omega(z)=0, \;|z|>1 \quad z^2=x^2+y^2 \ee
+and the corresponding velocity field is:
+\ben{PerlU} u(z,t)=f(|z|)\binom{y}{-x} \ee
+where
+\[
+f(|z|)=
+\begin{cases}
+    -\frac{1}{16|z|^2}(1-(1-|z|^2)^8)	& |z| \leq 1\\
+    -\frac{1}{16|z|^2} 			& |z|>1
+\end{cases}
+\]
+and are invariant with time. This test case is particularly useful as the availability of an analytical solution allows an accurate assessment of the $L^2$ error of the computed solution.
+
+\subsubsection{Cutoff Radius Effects}\label{Pcutoff}
+The cutoff radius is an important parameter in the desingularization of the Biot-Savart kernel. If it is too large it unnecessarily smooths the flow and the approximation error is larger with no added benefit. If it is too small the kernel is too close to singular and the quadrature error will be large. A proper cutoff radius choice will balance the two errors so they are of the same magnitude to minimize the total overall error. Figure \ref{fig:CutoffWU} compares the $L^2$ errors for the vorticity and velocity for a 6th order method. The cutoff radius is allowed to vary according to mesh size such that $\delta/\Delta x$ remains constant for a particular fixed order.
+
+The results confirm the expectation that too small or large a cutoff radius is detrimental. This is clearest for the velocity errors. Early on in the vorticity error it would appear that a smaller radius is beneficial, but as the solution evolves the convergence order decays. The smaller cutoff means the error due to the kernel approximation is lower (leading to better convergence early on), but the increased quadrature error from the more singular kernel begins to accumulate over time leading to a decaying convergence order for the smaller cutoffs.
+\begin{figure}
+\centering
+\includegraphics[width=1\textwidth]{CutoffWU.PNG}
+\caption{\label{fig:CutoffWU}Comparison of convergence effects on vorticity and velocity by kernel cutoff radius for $\delta/\Delta x$=0.1(..), 0.2(- -), 0.3(-), 0.5(-.), 0.9(-o);  Perlmann vortex, sixth order method.}
 \end{figure}
-Sometimes writing meaningless text can be quiet easy, but other times
-one is hard pressed to keep the words flowing.\footnote{And sometimes
-things get carried away in endless detail.}
-Meanwhile back in the other world, table~\ref{t:scheme_comparison} shows
-a nifty comparison.
-\begin{table}% no placement specified: defaults to here, top, bottom, page
- \begin{center}
-  \caption{Variable and Fixed Coefficient Runge-Kutta Schemes as a
-           Function of Reynolds Number}
-  \label{t:scheme_comparison}
-  \begin{tabular}{rrr}
-       Re & Vary & Fixed \\\hline
-        1 &  868 & 4,271 \\
-       10 &  422 & 2,736 \\
-       25 &  252 & 1,374 \\
-       50 &  151 &   736 \\
-      100 &  110 &   387 \\
-      500 &   85 &   136 \\
-    1,000 &   77 &   117 \\
-    5,000 &   81 &    98 \\
-   10,000 &   82 &    99
-  \end{tabular}
- \end{center}
+
+\subsubsection{Convergence Rates of Various Orders}
+A 3rd through 6th order method was used to measure convergence rate for various orders; the 6th order method has identical solver parameters as that used in the cutoff radius experiments. Figure \ref{fig:Porder} provides a comparison of the observed convergence rate of the vorticity for each of the various order methods. The 3rd and 4th order methods converge at full order, while the 5th and 6th order solutions converge at a little more than one half of an order less than optimal.
+
+\begin{wrapfigure}{R}{.5\textwidth}
+\centering
+\includegraphics[width=0.5\textwidth]{PorderR.PNG}
+\caption{\label{fig:Porder}Comparison of convergence rate for various order methods: 3rd(-.), 4th(..), 5th(- -), and 6th(-).}
+\end{wrapfigure}
+
+\subsubsection{Invariance of Conserved Quantities}\label{PConserveW}
+One of the main advantages of the velocity-vorticity is explicit conservation of vorticity. The left plot in Figure \ref{fig:PW_LinImpconserve} plots the log of relative conservation of vorticity with respect to initial total vorticity at t=0. Similar to total vorticity, moments of vorticity should also be conserved. The first moment, linear impulse can provide a useful diagnostic to check the validity of the solution. The right plot in Figure \ref{fig:PW_LinImpconserve} plots the total linear impulse for the sixth order method with varying numbers of elements. It is conserved to within nearly machine precision; solutions with more elements actually display a decrease in conservation of linear impulse, which is likely a result of a higher rate of accumulation of roundoff errors due to the greater number of degrees of freedom.
+
+\begin{figure}
+\centering
+\includegraphics[width=1\textwidth]{PW_LinImpconserve.png}
+\caption{\label{fig:PW_LinImpconserve}Conservation of total vorticity (left) and linear impulse (right), Perlmann test case, sixth order method with K$\times$K elements K= 3(-o), 4(-.), 5(..), 6(- -), and 7(-).}
+\end{figure}
+
+%---------
+\subsection{Strain: Interacting Vortex Patches}
+Strain's system of interacting random vortex patches \cite{Strain1996} forms the next validation case. Specific initial conditions are specified for each of the vortex patches in Table \ref{table:StrainTable} with the overall system consisting of the linear superposition of each patch
+\ben{StrainV} \omega(x,y,0) = \sum_{j=1}^m \Omega_j exp(-((x-x_j)^2 + (y-y_j)^2)/\rho_j^2) \ee
+An explicit data set for the results is not reported, but a set of contour plots illustrates the time evolution. The same parameters are used in the present solver and similar contour plots are compared against the validating set.
+
+\begin{table}
+\centering
+\caption{Interacting Vortex Patch Parameters}\label{table:StrainTable}
+\begin{tabular}{lllll}
+\hline
+j & $x_j$    & $y_j$    & $\rho_j$ & $\Omega_j$ \\ \hline
+1 & -0.6988 & -1.7756 & 0.6768  & -0.4515   \\
+2 & 1.4363  & -1.4566 & 0.3294  & 0.4968    \\
+3 & -0.1722 & 0.4175  & 0.5807  & -0.9643   \\
+4 & -1.5009 & -0.0937 & 0.2504  &  0.3418    \\ \hline
+\end{tabular}
 \end{table}
+
+\subsubsection{Comparison with Originally Published Results}\label{SComp}
+Although an analytical solution does not exist for the given vortex system, we shall compare the solution from the present method with that obtained by Strain in \cite{Strain1996}. He does not note the contour intervals used in the creation of his plots, but the strength and location of the initial vorticity patches are known. From this a digital scan of his initial vorticity plot was used to determine the radial distance of each contour line, and then the vorticity evaluated according to \eqref{StrainV} at the radial distance of the contour line. Based on this the approximate contour intervals determined were (-0.831, -0.696, -0.563, -0.43, -0.3, -0.168, -0.032, 0.099, 0.227, 0.364).
+
+Figure \ref{fig:StrainComp} provides a qualitative comparison of a sixth order current method solution with Strain's results at t=28. The two sets of results agree very well. Notably, the solution from the current method with only approximately 3000 degrees of freedom replicates quite well Strains result where N=25600.
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\textwidth]{StrainCompR.PNG}
+\caption{\label{fig:StrainComp}Comparison of Strain \cite{Strain1996} (left) with present method (right) t=28. Top to bottom, left to right: DOF= 6400, 12800, 25600; 3136, 7056, 63504. Contour interval for right column specified in \S\ref{SComp}. Reprinted with permission \cite{StrainLic}. }
+\end{figure}
+
+%---------
+\subsection{Koumoutsakos: Elliptical Vortex}
+The final validation case is the evolution of an elliptical vortex patch \cite{Koum1997}. The specific initial configuration is specified as
+\be \omega^{II}(r) = 20(1-(r/0.8)^4), \; r\leq 0.8 \quad \omega^{II}(r)=0, \; r>0.8 \ee
+however the cases tested were actually elliptical, to accommodate this the initial distribution was modified to
+\ben{KoumEqn} \omega^{II}(x,y,0)_{mod} = 20(1-((x/a)^2+(y/b)^2)^2/0.8^4 ) \quad a=1, \; b=2 \ee
+The contour levels are specified in the resultant figure as 0.25, 0.50, 1, 2, ..., 20; these levels are used in the current code's resultant plot for direct comparison.
 
 %============================================================
 \section{Validation}
@@ -305,6 +355,10 @@ A place to recognize others.
 
 %============================================================
 \begin{thebibliography}{9}% maximum number of references (for label width)
+%Me!
+\bibitem{Bevan}
+Bevan, J. J., \textit{Vortex Dominated Flows: A High-order, Conservative Eulerian Simulation Method}. Master's Thesis, University of Massachusetts Lowell, 2015.
+
 %VortexRefs
 \bibitem{Saffman1992}
 Saffman P. G., \textit{Vortex Dynamics}, Cambridge Univ. Press, Cambridge, UK, 1992.
@@ -354,7 +408,7 @@ Cockburn, B. and Shu, C.-W., “Runge-Kutta discontinuous Galerkin methods for c
 
 %LSERK
 \bibitem{Reid}
-Atcheson, T., \textit{Explicit Discontinuous Galerkin Methods for Linear Hyperbolic Problems}. Masters Thesis, Rice University, 2013.
+Atcheson, T., \textit{Explicit Discontinuous Galerkin Methods for Linear Hyperbolic Problems}. Master's Thesis, Rice University, 2013.
 \bibitem{Niegemann}
 Niegemann, J., Diehl R., and Busch K., "Efficient low-storage Runge–Kutta schemes with optimized stability regions," \textit{J. Comput. Phys.}, Vol. 231, No. 2, 2012, pp. 364-372.
 
