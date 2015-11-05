@@ -124,7 +124,7 @@ The desire to resolve fine vortical structures motivates the need for a high ord
 
 Finite difference methods suffer from similar problems as FV with extended stencils, as well as not being explicitly conservative. A finite element approach is ill-suited to the hyperbolic nature of vorticity advection. Spectral methods are promising, but for sparse vorticity domains are less-efficient due to the global support of the harmonic bases. However, discontinuous Galerkin (DG) methods \cite{HestWar} are a natural choice; they are conservative, able to take advantage of vorticity sparseness, are well-suited to handle advection via intelligent choice of a numerical flux function, and have bases with local/compact support.
 
-For domains free of impinging bodies a hexahedral mesh with a tensor product grid of interpolation points is convenient to implement. This permits the use of a line-DG \cite{Persson2013} approach that considerably simplifies multi-dimensional cases by allowing reuse of 1D methods. Choosing a 2D domain permits evaluation of whether the method is practical, as well as to limit solution times to those that are reasonable on a workstation. It also has the advantage of removing the vortex stretching term and reducing the vorticity to a scalar. The resultant partial differential equation (PDE) takes on the familiar form of a scalar conservation law. To maintain maximum flexibility for investigative purposes and to remove as much approximation error as possible the velocity field for validation of the underlying method is calculated via direct evaluation of the Biot-Savart integral.
+For domains free of impinging bodies a hexahedral mesh with a tensor product grid of interpolation points is convenient to implement. This permits the use of a line-DG \cite{Persson2013} approach that considerably simplifies multi-dimensional cases by allowing reuse of 1D methods. Initial investigation done in 2D permits evaluation of whether the method is practical, as well as to limit solution times to those that are reasonable on a workstation. It also has the advantage of removing the vortex stretching term and reducing the vorticity to a scalar. The resultant partial differential equation (PDE) takes on the familiar form of a scalar conservation law. To maintain maximum flexibility for investigative purposes and to remove as much approximation error as possible the velocity field for validation of the underlying method is calculated via direct evaluation of the Biot-Savart integral.
 
 %============================================================
 \section{Governing Equations and Discretization}
@@ -133,9 +133,9 @@ The Navier-Stokes momentum equation is
  \be \rho \left(\frac{\partial \mathbf{u}}{\partial t} + \mathbf{u} \cdot \nabla \mathbf{u} \right) = -\nabla p + \mu \nabla^2 \mathbf u + \tfrac13 \, \mu \nabla (\nabla\cdot\mathbf{u}) \ee
 where $u$ is the velocity field, $p$ is the pressure, and $\rho$ is the density. If we restrict ourselves to incompressible flows and define the quantity \textit{vorticity} as
 \be \mathbf{\omega} = \nabla \times \mathbf{u} \ee
-Then the traditional form of the Navier-Stokes equations can be recast
+then the traditional form of the Navier-Stokes equations can be recast:
 \ben{VV3D} \frac{\partial \omega}{\partial t} +  \mathbf{u} \cdot \nabla \omega - \omega \cdot \nabla  \mathbf{u} = S(x,t)\ee
-where we collect viscous generation of vorticity in $S$.
+We are interested in inviscid flows, so we collect viscous generation of vorticity in $S$ and permit it to be externally specified if necessary.
 
 For 2-D distributions of vorticity, several simplifications can be made. The originally vectorial vorticity becomes a scalar quantity, all vorticity is directed normal to the plane. As a result, the vortex stretching term in  Eqn.\,\eqref{VV3D} becomes zero. The only non-zero component of $\omega$ is in the z-direction, however the gradient of the velocity field is zero in the z-direction, so the product is therefore zero. The result is
 \ben{VV2D} \frac{\partial \omega}{\partial t} + u \cdot \nabla \omega = S(x,t)\ee
@@ -156,7 +156,7 @@ One may attempt to desingularize the Biot-Savart kernel by introducing a core fu
 
 The choice of a core function and a characteristic radius has important implications on the accuracy and convergence of a Lagrangian point vortex method. Choosing a cutoff radius too small and there is insufficient smoothing, too large and the vorticity discretization is spatially smeared. In a Lagrangian method the convolution with a core function has a physical heuristic: the point vortex is replaced by a finite size vortex blob described by $\eta(r)$, with characteristic radius $\delta$. 
 
-In the present method the core function is a means to an end; attempting to numerically integrate the singular Biot-Savart integral will result in spurious values, so the desingularized kernel is used as an approximation. A number of kernels can be chosen in a Lagrangian method, we found the following kernel\cite{WL} generally had the lowest approximation error:
+In contrast in the present method the core function is a means to an end; attempting to numerically integrate the singular Biot-Savart integral will result in spurious values, so the desingularized kernel is used as an approximation. A number of kernels can be chosen in a Lagrangian method, we found the following kernel\cite{WL} generally had the lowest approximation error for our purposes:
 \ben{PSkern0}  K_{spectral}= \frac{z}{2 \pi |z|^2} (1-J_0(\frac{z}{\delta})) \ee
 where we have substituted $z=x^*-x$, and $J_\alpha$ is a Bessel function of the first kind.
 
@@ -252,7 +252,7 @@ From a vorticity-velocity perspective elements with zero vorticity or boundary f
 \subsection{Explicit Time-Stepping}\label{TimeStep}
 An explicit time-stepping method is used for the time discretization of the semi-discrete system. The two chief categories are multi-step and multi-stage methods, typically either Adams-Bashforth or Runge-Kutta respectively. It is known that Forward Euler and AB2 are unstable for DG with an upwind flux due to it's dissipative nature \cite{Reid}. The choices permitted then are Runge-Kutta or a higher-order Adams-Bashforth.
 
-The recent thesis work of Atcheson \cite{Reid} presents a comprehensive overview of the optimal choice of time-stepping algorithm for a DG operator. In particular it was shown that Runge-Kutta methods outperformed AB3 and that all higher-order Adams-Bashforth schemes required far too restrictive of a time-step to satisfy the CFL condition to be efficient. Out of all the Runge-Kutta schemes considered one of the more competitive options was the ``NRK14C'' scheme developed by Niegemann et al. \cite{Niegemann}. This is an optimized 4th order, 14 stage low storage scheme. This choice of method permits a larger stable time step for proportionally less computational work.
+The recent thesis work of Atcheson \cite{Reid} presents a comprehensive overview of the optimal choice of time-stepping algorithm for a DG operator. In particular it was shown that Runge-Kutta methods outperformed AB3 and that all higher-order Adams-Bashforth schemes required far too restrictive of a time-step to satisfy the CFL condition to be efficient. Out of all the Runge-Kutta schemes considered one of the more competitive options was the ``NRK14C'' scheme developed by Niegemann et al. \cite{Niegemann}. This is an optimized 4th order, 14 stage low storage scheme. This method choice permits a larger stable time step for proportionally less computational work compared to classical RK4.
 
 %============================================================
 \section{Results}
@@ -275,7 +275,7 @@ and are invariant with time. This test case is particularly useful as the availa
 \subsubsection{Cutoff Radius Effects}\label{Pcutoff}
 The cutoff radius is an important parameter in the desingularization of the Biot-Savart kernel. If it is too large it unnecessarily smooths the flow and the approximation error is larger with no added benefit. If it is too small the kernel is too close to singular and the quadrature error will be large. A proper cutoff radius choice will balance the two errors so they are of the same magnitude to minimize the total overall error. Figure \ref{fig:CutoffWU} compares the $L^2$ errors for the vorticity and velocity for a 6th order method. The cutoff radius is allowed to vary according to mesh size such that $\delta/\Delta x$ remains constant for a particular fixed order.
 
-The results confirm the expectation that too small or large a cutoff radius is detrimental. This is clearest for the velocity errors. Early on in the vorticity error it would appear that a smaller radius is beneficial, but as the solution evolves the convergence order decays. The smaller cutoff means the error due to the kernel approximation is lower (leading to better convergence early on), but the increased quadrature error from the more singular kernel begins to accumulate over time leading to a decaying convergence order for the smaller cutoffs.
+The results confirm the expectation that too small or large a cutoff radius is detrimental. This is clearest for the velocity errors. Early on in the vorticity error it would appear that a radius that was too small in the velocity comparison is beneficial, but as the solution evolves the convergence order decays. The smaller cutoff means the error due to the kernel approximation is lower (leading to better convergence early on), but the increased quadrature error from the more singular kernel begins to accumulate over time leading to a decaying convergence order for the smaller cutoffs.
 \begin{figure}
 \centering
 \includegraphics[width=1\textwidth]{CutoffWU.PNG}
@@ -288,11 +288,11 @@ A 3rd through 6th order method was used to measure convergence rate for various 
 \begin{wrapfigure}{R}{.5\textwidth}
 \centering
 \includegraphics[width=0.5\textwidth]{PorderR.PNG}
-\caption{\label{fig:Porder}Comparison of convergence rate for various order methods: 3rd(-.), 4th(..), 5th(- -), and 6th(-).}
+\caption{\label{fig:Porder}Comparison of convergence rate for various order methods: 3rd(-.), 4th(..), 5th(- -), and 6th(-), Perlmann vortex.}
 \end{wrapfigure}
 
 \subsubsection{Invariance of Conserved Quantities}\label{PConserveW}
-One of the main advantages of the velocity-vorticity is explicit conservation of vorticity. The left plot in Figure \ref{fig:PW_LinImpconserve} plots the log of relative conservation of vorticity with respect to initial total vorticity at t=0. Similar to total vorticity, moments of vorticity should also be conserved. The first moment, linear impulse can provide a useful diagnostic to check the validity of the solution. The right plot in Figure \ref{fig:PW_LinImpconserve} plots the total linear impulse for the sixth order method with varying numbers of elements. It is conserved to within nearly machine precision; solutions with more elements actually display a decrease in conservation of linear impulse, which is likely a result of a higher rate of accumulation of roundoff errors due to the greater number of degrees of freedom.
+One of the main advantages of the velocity-vorticity form is explicit conservation of vorticity. The left plot in Figure \ref{fig:PW_LinImpconserve} plots the log of relative conservation of vorticity with respect to initial total vorticity at t=0. Similar to total vorticity, moments of vorticity should also be conserved. The first moment, linear impulse can provide a useful diagnostic to check the validity of the solution. The right plot in Figure \ref{fig:PW_LinImpconserve} plots the total linear impulse for the sixth order method with varying numbers of elements. It is conserved to within nearly machine precision; solutions with more elements actually display a decrease in conservation of linear impulse, which is likely a result of a higher rate of accumulation of roundoff errors due to the greater number of degrees of freedom.
 
 \begin{figure}
 \centering
@@ -320,14 +320,25 @@ j & $x_j$    & $y_j$    & $\rho_j$ & $\Omega_j$ \\ \hline
 \end{table}
 
 \subsubsection{Comparison with Originally Published Results}\label{SComp}
-Although an analytical solution does not exist for the given vortex system, we shall compare the solution from the present method with that obtained by Strain in \cite{Strain1996}. He does not note the contour intervals used in the creation of his plots, but the strength and location of the initial vorticity patches are known. From this a digital scan of his initial vorticity plot was used to determine the radial distance of each contour line, and then the vorticity evaluated according to \eqref{StrainV} at the radial distance of the contour line. Based on this the approximate contour intervals determined were (-0.831, -0.696, -0.563, -0.43, -0.3, -0.168, -0.032, 0.099, 0.227, 0.364).
+Although an analytical solution does not exist for the given vortex system, we shall compare the solution from the present method with that obtained by Strain \cite{Strain1996}. He does not note the contour intervals used in the creation of his plots, but the strength and location of the initial vorticity patches are known. From this a digital scan of his initial vorticity plot was used to determine the radial distance of each contour line, and then the vorticity evaluated according to \eqref{StrainV} at the radial distance of the contour line. Based on this the approximate contour intervals determined were (-0.831, -0.696, -0.563, -0.43, -0.3, -0.168, -0.032, 0.099, 0.227, 0.364).
 
-Figure \ref{fig:StrainComp} provides a qualitative comparison of a sixth order current method solution with Strain's results at t=28. The two sets of results agree very well. Notably, the solution from the current method with only approximately 3000 degrees of freedom replicates quite well Strains result where N=25600.
+Figure \ref{fig:StrainComp} provides a qualitative comparison of a sixth order method solution with Strain's results at t=28. The two sets of results agree very well. Notably, the solution from the current method with only approximately 3000 degrees of freedom replicates quite well Strain's result where N=25600. In all convergence test cases vorticity was conserved to within 0.03\% and linear impulse to within 2E-5.
 \begin{figure}[t]
 \centering
 \includegraphics[width=1\textwidth]{StrainCompR.PNG}
-\caption{\label{fig:StrainComp}Comparison of Strain \cite{Strain1996} (left) with present method (right) t=28. Top to bottom, left to right: DOF= 6400, 12800, 25600; 3136, 7056, 63504. Contour interval for right column specified in \S\ref{SComp}. Reprinted with permission \cite{StrainLic}. }
+\caption{\label{fig:StrainComp}Comparison of Strain \cite{Strain1996} (left) with present method (right) t=28. Left to right, top to bottom: DOF= 6400, 12800, 25600; 3136, 7056, 63504. Contour interval for right column specified in \S\ref{SComp}. Reprinted with permission \cite{StrainLic}. }
 \end{figure}
+
+\subsubsection{Approximated Convergence Rates of Various Orders}\label{SConverge}
+In order to be able to make a quantitative comparison lower degree of freedom solutions were compared against a pseudo-exact solution with far more elements. The error in the higher degree of freedom solution with respect to an exact solution should be dwarfed by the error of the lower degree of freedom solutions. In this case a sixth order 60$\times$60 element solution was used as the comparative solution. A time-step of $\Delta t=0.32$ was chosen to satisfy the CFL condition in all tests allowing the time-step to be kept constant across all tests.
+
+A set of lower element count sixth order runs were performed with two different cutoff radii. There is a striking difference in the convergence properties of each. Early on the smaller cutoff radius run displays superior convergence, but this continually decays over time. The convergence rate is poorer initially for the larger cutoff radius result, but it remains fairly steady at a 3rd order convergence. The convergence rate behavior is to be expected given the results of the Perlmann cutoff radius tests. The larger cutoff radius lowers the convergence rate of the calculated velocity field (and therefore the overall method), but the accumulated quadrature error over time is much smaller, enough that the convergence rate is relatively steady.
+
+\begin{wrapfigure}{R}{.5\textwidth}
+\centering
+\includegraphics[width=.5\textwidth]{Strain6vs6R.PNG}
+\caption{\label{fig:Strain6vs6}Dependency of rate of convergence on cutoff radius in sixth order method, for a $\delta/\Delta x$= 0.5(- -) and 0.25(-), Strain vortex patches. }
+\end{wrapfigure}
 
 %---------
 \subsection{Koumoutsakos: Elliptical Vortex}
@@ -337,23 +348,45 @@ however the cases tested were actually elliptical, to accommodate this the initi
 \ben{KoumEqn} \omega^{II}(x,y,0)_{mod} = 20(1-((x/a)^2+(y/b)^2)^2/0.8^4 ) \quad a=1, \; b=2 \ee
 The contour levels are specified in the resultant figure as 0.25, 0.50, 1, 2, ..., 20; these levels are used in the current code's resultant plot for direct comparison.
 
-%============================================================
-\section{Validation}
+\subsubsection{Comparison with Originally Published Results}\label{KoumComper}
+Although an analytical solution does not exist for the given vortex system, we shall compare the solution from the present method with that obtained by Koumoutsakos \cite{Koum1997}. Identical contour intervals were used and the solution was observed at similar times. The smoothness of the initial vorticity configuration is limited by the polynomial generating function, so a 4th order method was used with $30^2$ elements and a $\delta/\Delta x=0.4$. In order to satisfy the CFL condition a time-step of 0.0104 seconds was necessary.
+
+Figures \ref{fig:KoumComp1} and \ref{fig:KoumComp2} compare the evolution of the solution obtained from the present method with the results of Koumoutsakos. With the exception of some numerical artifacts near regions of strong vorticity gradients, all of the plots agree quite well.
+
+It is uncertain whether the third observation time reported by Koumoutsakos is rounded \cite{Koum1997}, it does not match up with the expected vortex behavior. All other matching times occurred within a tenth of a second of the reported time, reasonably explained by rounding.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\textwidth]{KoumComp1R.PNG}
+\caption{\label{fig:KoumComp1}Comparison of vorticity, Koumoutsakos \cite{Koum1997} (top) and present method (bottom). From left to right, top to bottom: t=1, 2, 4; 0.80, 1.93, 2.32. Reprinted with permission \cite{KoumLic}.}
+\end{figure}
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\textwidth]{KoumComp2R.PNG}
+\caption{\label{fig:KoumComp2}Comparison of vorticity, Koumoutsakos \cite{Koum1997} (top) and present method (bottom). From left to right, top to bottom: t=6, 12, 18; 5.94, 11.99, 17.94. Reprinted with permission \cite{KoumLic}.}
+\end{figure}
+
+%
+\subsubsection{Evolution of Aspect Ratio}
+One important feature of the test case studied by Koumoutsakos \cite{Koum1997} was its non-axisymmetrization. The time evolution of the ellipticity was monitored by observing the change of the effective aspect ratio with respect to time. This provides an additional method of comparison between the results of the present method and  those of Koumoutsakos.
+
+Figure \ref{fig:AspectRatio} compares the evolution of the two effective aspect ratios, the solver parameters were identical to those used in \S\ref{KoumComper}. The plots agree well, the most pronounced difference being the greater amplitude of the peaks in the quasi-steady state for $t>17$ compared to Koumoutsakos' results.
+\begin{figure}
+\centering
+\includegraphics[width=1\textwidth]{AspectRatio.PNG}
+\caption{\label{fig:AspectRatio}Comparison of effective aspect ratio, Koumoutsakos \cite{Koum1997} (top) and present method (bottom). Reprinted with permission \cite{KoumLic}.}
+\end{figure}
 
 %============================================================
 \section{Conclusion}
 
-After much typing, the paper can now conclude.
-Four rocks were next to the channel.
-This caused a few standing waves during the rip that one could ride on
-the way in or jump on the way out.
+A complete high-order method for velocity-vorticity inviscid flow that integrates all necessary subsystems was created. Both the solver and the underlying Eulerian vortex approach were validated against analytical and qualitative test cases. Finally, the $L^2$ error, vortex diagnostics, and convergence rate were measured. The method was shown capable of achieving near optimal convergence rate in the analytical test case. In flows where vorticity is changing rapidly spatially the method suffers from insufficient Biot-Savart quadrature convergence, but still has the possibility of high-order convergence if parameters are chosen carefully. If an improvement were to be made to the ability of the quadrature routine to integrate either the nearly singular Biot-Savart kernel approximation or to directly handle the singular kernel it may be possible to maintain near-optimal overall convergence of the method without decay over time.
 
 %============================================================
-\section*{Acknowledgments}
-
-A place to recognize others.
+%\section*{Acknowledgments}
 
 %============================================================
+\newpage
 \begin{thebibliography}{9}% maximum number of references (for label width)
 %Me!
 \bibitem{Bevan}
