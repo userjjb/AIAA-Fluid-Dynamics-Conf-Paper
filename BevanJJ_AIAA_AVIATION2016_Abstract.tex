@@ -54,13 +54,13 @@
 \usepackage{listings}								%Code formatting
 \usepackage{wrapfig}
 
- \title{A High-order Conservative Eulerian Simulation Method for Vortex Dominated Flows}
+ \title{A High-Order Conservative Eulerian Simulation Method for Vortex Dominated Flows}
 
  \author{
- Joshua J. Bevan%
-    \thanks{Graduate Student, University of Massachusetts Lowell, Lowell, Massachusetts 01854.}\\
-  {\normalsize\itshape
-   University of Massachusetts Lowell, Lowell, Massachusetts, 01854, USA}\\
+Joshua J. Bevan\thanks{Graduate Student, Department of Mechanical Engineering.}
+\ and David J. Willis\thanks{Associate Professor, Department of Mechanical Engineering, Senior Member AIAA.}\\
+{\normalsize\itshape
+ University of Massachusetts Lowell, Lowell, Massachusetts, 01854, U.S.A.}\\
  }
 
  % Data used by 'handcarry' option if invoked
@@ -86,7 +86,7 @@
 
 %============================================================
 \begin{abstract}
-A high-order, conservative Eulerian method is presented for the simulation of vortex dominated inviscid fluid flows. The primitive variable incompressible Euler equations are recast in the velocity-vorticity form to explicitly enforce conservation of vorticity. The advection of the vorticity is then calculated via a two-step process: the velocity field is determined by evaluation of the Biot-Savart integral, and then a line-based discontinuous Galerkin (DG) Eulerian spatial discretization scheme is applied to accurately advect the vorticity field. The accuracy and convergence of this method was examined for test cases where an analytical solution exists, as well as more challenging test cases which lack an analytical solution. The convergence rate behavior is chiefly controlled by the error in the calculated velocity field. Velocity errors are due to two factors: the approximation of the Biot-Savart integral with a desingularized form, and poor quadrature convergence for the nearly singular integral. Solver parameters were chosen to balance these two effects resulting in nearly optimal convergence of the overall method in the analytical test, and high-order convergence in the qualitative test case.
+A high-order, conservative Eulerian method is presented for the simulation of vortex dominated inviscid fluid flows. The primitive variable incompressible Euler equations are recast in the velocity-vorticity form to explicitly enforce conservation of vorticity. The advection of the vorticity is then calculated via a two-step process: the velocity field is determined by evaluation of the Biot-Savart integral, and then a line-based discontinuous Galerkin (DG) Eulerian spatial discretization scheme is applied to accurately advect the vorticity field. The accuracy and convergence of this method was examined for test cases where an analytical solution exists, as well as more challenging test cases which lack an analytical solution. The convergence rate behavior is chiefly controlled by the error in the calculated velocity field. Velocity errors are due to two factors: the approximation of the Biot-Savart integral with a desingularized form, and reduced quadrature convergence for the nearly singular integral. Solver parameters were chosen to balance these two effects resulting in nearly optimal convergence of the overall method in the analytical test, and high-order convergence in the qualitative test case.
 \end{abstract}
 
 %============================================================
@@ -109,7 +109,7 @@ A high-order, conservative Eulerian method is presented for the simulation of vo
 \section{Introduction}
 Direct solution of Navier-Stokes is impractical for many fluid problems and where possible simplifications should be made; one such possibility is for vortex dominated flows. It is possible to recast Navier-Stokes from a primitive variable form ($u,v,p$) to a velocity-vorticity ($u,v,\omega$) form. This has several advantages: explicit conservation of vorticity, elimination of pressure terms (for incompressible flows), and reduction of required simulated degrees of freedom to just those that form the vorticity support.
 
-Many vortex based simulation techniques use a Lagrangian approach to discretize the vorticity into a set of vortex particles\cite{Point4}, lines\cite{Line4}, sheets\cite{Sheet1}, or volumes\cite{Volume1}. This is a natural approach to take given the material nature of the vorticity due to Helmholtz and Kelvin's theorems.
+Many vortex based simulation techniques use a Lagrangian approach to discretize the vorticity into a set of vortex particles\cite{Point4}, lines\cite{Line4}, sheets\cite{Sheet1}, or volumes\cite{Volumes1}. This is a natural approach to take given the material nature of the vorticity due to Helmholtz and Kelvin's theorems.
 
 %Lagrangian codes
 The velocity field due to the vorticity is calculated from solving the Poisson problem \cite{MiscMeth1}, or through inversion of the Poisson problem via evaluation of the Biot-Savart integral \cite{Saffman1992}. There are several challenges with evaluation of the velocity: boundary conditions in the Poisson solution method, and singularities in the Biot-Savart volume integral method. Typically Lagrangian point vortex codes must de-singularize the kernel \cite{Rosenhead1930,Moore1972}. Direct summation for the velocity field has a $\mathcal{O}(N^2)$ complexity. Tree-codes \cite{LindsayKrasny2001} and Fast Multipole Methods (FMM) \cite{Strain1997} are ways of achieving a more efficient calculation.
@@ -197,7 +197,7 @@ We solve the PDE ``line-wise''; we form the tensor product of the chosen 1D inte
 
 %============================================================
 \section{Implementation Details}
-Notable implementation details are presented here. A comprehensive overview of all implementation details can be found in the thesis\cite{Bevan} upon which this paper is based.
+Notable implementation details are presented here. A comprehensive overview of all implementation details is presented in Bevan's thesis\cite{Bevan}.
 
 \subsection{Solver Overview}
 An outline of the solver is useful for understanding the general programmatic flow. Several items in this program outline will be discussed in greater detail.
@@ -279,16 +279,16 @@ The results confirm the expectation that too small or large a cutoff radius is d
 \begin{figure}
 \centering
 \includegraphics[width=1\textwidth]{CutoffWU.PNG}
-\caption{\label{fig:CutoffWU}Comparison of convergence effects on vorticity and velocity by kernel cutoff radius for $\delta/\Delta x$=0.1(..), 0.2(- -), 0.3(-), 0.5(-.), 0.9(-o);  Perlmann vortex, sixth order method.}
+\caption{\label{fig:CutoffWU}Comparison of convergence effects on vorticity and velocity by kernel cutoff radius for $\delta/\Delta x$=0.1($\cdot \cdot \cdot$), 0.2(--{ }--), 0.3(---), 0.5(--\,$\cdot$\,--), 0.9(--\!$\ominus$\!--);  Perlmann vortex, sixth order method.}
 \end{figure}
 
 \subsubsection{Convergence Rates of Various Orders}
 A 3rd through 6th order method was used to measure convergence rate for various orders; the 6th order method has identical solver parameters as that used in the cutoff radius experiments. Figure \ref{fig:Porder} provides a comparison of the observed convergence rate of the vorticity for each of the various order methods. The 3rd and 4th order methods converge at full order, while the 5th and 6th order solutions converge at a little more than one half of an order less than optimal.
 
-\begin{wrapfigure}{R}{.5\textwidth}
+\begin{wrapfigure}{R}{.52\textwidth}
 \centering
-\includegraphics[width=0.5\textwidth]{PorderR.PNG}
-\caption{\label{fig:Porder}Comparison of convergence rate for various order methods: 3rd(-.), 4th(..), 5th(- -), and 6th(-), Perlmann vortex.}
+\includegraphics[width=0.52\textwidth]{PorderR.PNG}
+\caption{\label{fig:Porder}Comparison of convergence rate for various order methods: 3rd(--\,$\cdot$\,--), 4th($\cdot \cdot \cdot$), 5th(--{ }--), and 6th(---), Perlmann vortex.}
 \end{wrapfigure}
 
 \subsubsection{Invariance of Conserved Quantities}\label{PConserveW}
@@ -297,7 +297,7 @@ One of the main advantages of the velocity-vorticity form is explicit conservati
 \begin{figure}
 \centering
 \includegraphics[width=1\textwidth]{PW_LinImpconserve.png}
-\caption{\label{fig:PW_LinImpconserve}Conservation of total vorticity (left) and linear impulse (right), Perlmann test case, sixth order method with K$\times$K elements K= 3(-o), 4(-.), 5(..), 6(- -), and 7(-).}
+\caption{\label{fig:PW_LinImpconserve}Conservation of total vorticity (left) and linear impulse (right), Perlmann test case, sixth order method with K$\times$K elements K= 3((--\!$\ominus$\!--), 4(--\,$\cdot$\,--), 5($\cdot \cdot \cdot$), 6(--{ }--), and 7(---).}
 \end{figure}
 
 %---------
@@ -337,7 +337,7 @@ A set of lower element count sixth order runs were performed with two different 
 \begin{wrapfigure}{R}{.5\textwidth}
 \centering
 \includegraphics[width=.5\textwidth]{Strain6vs6R.PNG}
-\caption{\label{fig:Strain6vs6}Dependency of rate of convergence on cutoff radius in sixth order method, for a $\delta/\Delta x$= 0.5(- -) and 0.25(-), Strain vortex patches. }
+\caption{\label{fig:Strain6vs6}Dependency of rate of convergence on cutoff radius in sixth order method, for a $\delta/\Delta x$= 0.5(--{ }--) and 0.25(---), Strain vortex patches. }
 \end{wrapfigure}
 
 %---------
@@ -417,6 +417,8 @@ Strain J., "Fast adaptive 2D vortex methods," \textit{Journal of computational p
 Lindsay K., and Krasny R., "A particle method and adaptive treecode for vortex sheet motion in three-dimensional flow," \textit{J. Comput. Phys.}, Vol. 172, No.2, 2001, pp. 879-907.
 \bibitem{WL}
 Winckelmans, G. S., Leonard A., "Contributions to vortex particle methods for the computation of three-dimensional incompressible unsteady flows," \textit{J. Comput. Phys.}, Vol. 109, No. 2, 1993, pp. 247-273.
+\bibitem{BealeMajda}
+Beale, J. T., and Majda A., "High order accurate vortex methods with explicit velocity kernels," \textit{J. Comput. Phys.}, Vol. 58, No. 2, 1985, pp. 188-208.
 
 %Remeshing problems
 \bibitem{Remesh2}
@@ -464,6 +466,8 @@ Russell, D., and Wang, Z. Jane., "A Cartesian grid method for modeling multiple 
 Calhoun, D., "A Cartesian grid method for solving the two-dimensional streamfunction-vorticity equations in irregular regions," \textit{J. Comput. Phys.}, Vol. 176, No. 2, 2002, pp. 231-275.
 \bibitem{MiscMeth4}
 Suh, J-C. "The evaluation of the Biot–Savart integral. Journal of engineering mathematics," Vol. 37, No. 4, 2000, pp. 375-395.
+\bibitem{SteinhoffUnderhill1994}
+Steinhoff J., Underhill D., "Modification of the Euler equations for ``vorticity confinement'': Application to the computation of interacting vortex rings," \textit{Phys. Fluids}, Vol. 6, No. 8, 1994, pp. 2738-2743.
 
 %Licenses
 \bibitem{KoumLic}
