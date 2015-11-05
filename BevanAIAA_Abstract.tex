@@ -51,6 +51,7 @@
 \documentclass[]{aiaa-tc}% insert '[draft]' option to show overfull boxes
 \usepackage{amsmath}								%For mathematical typesetting
 \usepackage{amssymb}								%For mathematical typesetting
+\usepackage{listings}								%Code formatting
 
  \title{A High-order Conservative Eulerian Simulation Method for Vortex Dominated Flows}
 
@@ -88,7 +89,7 @@ A high-order, conservative Eulerian method is presented for the simulation of vo
 \end{abstract}
 
 %============================================================
-\section*{Nomenclature}
+%\section*{Nomenclature}
 
 %\begin{tabbing}
 %  XXX \= \kill% this line sets tab stop
@@ -117,6 +118,7 @@ Lagrangian point methods present several problems. Point disorganization can occ
 %Existing Eulerian codes
 In comparison, Eulerian approaches to vortex methods tend to be less common. Work has been done for viscous flows with solid bodies; both stationary \cite{MiscMeth3} and moving \cite{MiscMeth2}. Both of these solve the streamfunction-vorticity formulation, not the velocity-vorticity formulation. The velocity-vorticity formulation has been solved by an Eulerian approach by others \cite{MiscMeth4}. A notable example of an Eulerian approach to the velocity-vorticity formulation is the work of Brown et al. \cite{Brown2000} who adapted the velocity-vorticity approach to a low order Finite Volume (FV) solver. Later they were able to extend their method to be accelerated via a FMM \cite{Brown2004}. However, like most FV approaches, to extend to high order solution approximations requires extended stencils that ultimately limit the geometrical freedom of the mesh. Steinhoff et al. also used an Eulerian approach, but solved a modified form of the inviscid Euler equations with ``vorticity confinement'' rather than the velocity-vorticity equation \cite{SteinhoffUnderhill1994}.
 
+%Choice of present method
 The desire to resolve fine vortical structures motivates the need for a high order solver. Considering the challenges associated with achieving a high order Lagrangian method and the success of Brown et al.'s low order method, a high order Eulerian vorticity-velocity method would seem to be a possible choice. This leaves the choice of a spatial discretization.
 
 Finite difference methods suffer from similar problems as FV with extended stencils, as well as not being explicitly conservative. A finite element approach is ill-suited to the hyperbolic nature of vorticity advection. Spectral methods are promising, but for sparse vorticity domains are less-efficient due to the global support of the harmonic bases. However, discontinuous Galerkin (DG) methods \cite{HestWar} are a natural choice; they are conservative, able to take advantage of vorticity sparseness, are well-suited to handle advection via intelligent choice of a numerical flux function, and have bases with local/compact support.
@@ -124,8 +126,8 @@ Finite difference methods suffer from similar problems as FV with extended stenc
 For domains free of impinging bodies a hexahedral mesh with a tensor product grid of interpolation points is convenient to implement. This permits the use of a line-DG \cite{Persson2013} approach that considerably simplifies multi-dimensional cases by allowing reuse of 1D methods. Choosing a 2D domain permits evaluation of whether the method is practical, as well as to limit solution times to those that are reasonable on a workstation. It also has the advantage of removing the vortex stretching term and reducing the vorticity to a scalar. The resultant partial differential equation (PDE) takes on the familiar form of a scalar conservation law. To maintain maximum flexibility for investigative purposes and to remove as much approximation error as possible the velocity field for validation of the underlying method is calculated via direct evaluation of the Biot-Savart integral.
 
 %============================================================
-\section{Governing Equations and Spatial Discretization}
-
+\section{Governing Equations and Discretization}
+\subsection{Velocity-Vorticity Formulation}
 The Navier-Stokes momentum equation is
  \be \rho \left(\frac{\partial \mathbf{u}}{\partial t} + \mathbf{u} \cdot \nabla \mathbf{u} \right) = -\nabla p + \mu \nabla^2 \mathbf u + \tfrac13 \, \mu \nabla (\nabla\cdot\mathbf{u}) \ee
 where $u$ is the velocity field, $p$ is the pressure, and $\rho$ is the density. If we restrict ourselves to incompressible flows and define the quantity \textit{vorticity} as
@@ -155,7 +157,95 @@ The choice of a core function and a characteristic radius has important implicat
 
 In the present method the core function is a means to an end; attempting to numerically integrate the singular Biot-Savart integral will result in spurious values, so the desingularized kernel is used as an approximation. A number of kernels can be chosen in a Lagrangian method, we found the following kernel\cite{WL} generally had the lowest approximation error:
 \ben{PSkern0}  K_{spectral}= \frac{z}{2 \pi |z|^2} (1-J_0(\frac{z}{\delta})) \ee
-where we have substituted $z=x^*-x$, and $J_\alpha$ are Bessel functions of the first kind. 
+where we have substituted $z=x^*-x$, and $J_\alpha$ is a Bessel function of the first kind.
+
+%---------
+\subsection{Discontinuous Galerkin Spatial Discretization}
+In order to solve Eqn.\,\eqref{VV2D} we adopt a method-of-lines approach \cite{RKDG}. We will first spatially discretize the system to obtain the semi-discrete system, then we use an explicit time discretization method to march forward in time. Note that Eqn.\,\eqref{VV2D} has the form of a scalar conservation law, with $\omega$ being the conserved quantity. The velocity field that advects the conserved quantity has been calculated by evaluation of the Biot-Savart integral for the current timestep.
+
+We use a standard nodal DG formulation\cite{HestWar} for the 1D problem, resulting in the variational form defined on a particular element:
+\be \int_\Omega \frac{\partial \aomega}{\partial t} \, \phi_j \;dx + \int_\Omega \frac{\partial f(\aomega)}{\partial x} \, \phi_j \;dx = 0 \quad\mbox{for all}\; j\ee
+where $\aomega$ is the solution approximation for the vorticity, and $\phi_j$ is the $j^{th}$ test function.  Both the solution approximation bases and the test functions are apart of the same polynomial vector space.
+
+We take the set of Lagrange polynomials as the basis for our polynomial vector space. The interpolatory property of the Lagrange basis means that $\ell_i(x_j) = \delta_{ij}$, so that the value of the function at the interpolation points forms the expansion coefficients. Therefore the local Mth order approximation to vorticity takes the form:
+\be \omega(x,t) \approx \aomega(x,t) = \sum_{i=0}^M a_i(t)\psi_i(x)\ee
+where $a_i$ is the value of the vorticity interpolation at the $i^{th}$ node, and $\psi_i$ is the $i^{th}$ solution approximation basis.
+
+The spatial discretization thus described only concerns the solution within an element. Continuity across elements is not enforced in DG, the solution is multiply defined at coincident nodes from neighboring elements. To recover the global solution, flux functions are usually employed to couple local elemental solutions to one another. We use an upwind flux, where defining the average as $\{\!\{\omega^+\}\!\} = \frac{\omega^++\omega^-}{2}$ and the jump as $[[\omega]]=\omega^+-\omega^-$ \cite{HestWar}, yields
+\be \hat{f}_{upwind}(x^+,x^-)=u\{\!\{\aomega\}\!\} + \frac{|u|}{2}[[\aomega]]\ee
+
+Continuing to follow a standard nodal DG approach and substitution of these choices of bases functions and flux functions yields the elemental form:
+\ben{DGtemp2} \frac{\Delta x}{2}	\sum_{i=0}^M \left[ \frac{d a_i}{dt}	\int_{-1}^{1}\psi_i  \, \phi_j \;dX \right]
++\hat{f}\phi_j \Big|^{x_R}_{x_L} 
+- \int_{-1}^{1} f(\aomega) \, \frac{d \phi_j}{dX} \;dX = 0 \ee
+where $x_R$ and $x_L$ are the element bounds, we have mapped to a computational element $X \in [-1, 1]$ via the mapping $X=G(x)=\frac{2(x-x_L)}{\Delta x}+1$, and $\Delta x = x_R - x_L$ is the element size.
+
+Thus far only a 1D solution has been discussed. The 2D solution basis is formed from the tensor product of two orthogonal 1D solutions, each along a coordinate axis. An important consequence of the tensor basis and hexahedral mesh is that the two basis directions are not coupled except at the interpolation nodes at the intersection of each direction's basis. This is the central idea in the line-DG \cite{Persson2013} approach, a 2D problem is transformed into two 1D problems of the form of Eqn.\,\eqref{DGtemp2}. The 2D time evolution of the overall system is the linear combination of the 1D evolutions; notably the instantaneous rate of change of a particular node is the sum of the rates from each direction.
+
+We can now use the developed 1D basis in a tensor product to form our 2D basis
+\be f(x,y) \approx \left[\sum_{t=0}^M z_t \ell_t(y) \right] \times \left[ \sum_{s=0}^M z_s \ell_s(x) \right] = \sum_{t=0}^M \sum_{s=0}^M z_{st} \ell_t \ell_s =  \sum_{t=0}^M z_{st} \ell_t \sum_{s=0}^M  \ell_s \ee
+where $s$ and $t$ are node numbers along the x and y directions respectively.
+
+We now substitute our basis into Eqn.\,\eqref{DGtemp2} to get a particular direction's PDE
+\ben{DGJoshTemp} \frac{\Delta x}{2}	\sum_{i=0}^M \left[ \frac{d z_{ij}}{dt}	\int_{-1}^{1}\ell_i  \, \ell_j \;dX \right]
++\hat{f}\ell_j \Big|^{x_R}_{x_L} 
+- \int_{-1}^{1} f(\aomega) \, \ell_j' \;dX = 0 \ee
+We solve the PDE ``line-wise''; we form the tensor product of the chosen 1D interpolation nodes along each direction (in 2D there are x-line bases and y-line bases). The rate of change at a particular node $x_{st}$ is:
+
+\be \frac{\partial \omega_{st}}{\partial t} = (\frac{\partial \omega_{st}}{\partial t})_{x-line} + (\frac{\partial \omega_{st}}{\partial t})_{y-line} \ee
+
+%============================================================
+\section{Implementation}
+\subsection{Solver Overview}
+\begin{lstlisting}[language=Matlab]
+Define problem parameters
+Define solver parameters
+Calculate derived solver parameters
+Setup intitial conditions
+Initialize solver
+%Time stepping
+for t=0 to end
+   if datalog?=yes
+      save system state to file and plot
+   end
+   %Loop through RK stages
+   for s=1 to last_stage
+      %For elements above threshold
+      for each vorticity source
+         calculate velocity contributions
+      end
+      %Calculate semi-discrete system terms
+      interpolate element_boundary_vorticity
+      calculate numerical_fluxes
+      calculate total_surface_flux
+      calculate internal_stiffness_flux
+		
+      vorticity_rate_of_change=...
+         internal_stiffness_flux - total_surface_flux
+		
+      RK_stage= (RK_coeff_a*RK_stage) +...
+         (time_step * vorticity_rate_of_change)
+      vorticity= vorticity + RK_coeff_b * RK_stage
+   end
+end
+\end{lstlisting}
+
+\subsection{Vortex Dominated Flow: Diagnostics}
+Two diagnostics are useful to evaluate the evolution of vortex dominated flows. The first is the vorticity moments of the system, which should be conserved \cite{Koum1997}, and are given by:
+\be J_{mn}=\int\int \omega(x,y)x^my^n \; dx\,dy \ee
+We shall consider in particular the linear impulse, $J_{01}$ and $J_{10}$.
+
+The other diagnostic considered is the effective aspect ratio \cite{Koum1997}. This is particularly useful when considering the evolution of an elliptical vortex, which will typically undergo some degree of axisymmetrization. The effective aspect ratio is:
+\be \lambda_{eff}^2 = \frac{J+R}{J-R} \ee
+where $J=J_{20}+J_{02}$, $D=J_{20}-J_{02}$, and $R^2=D^2+4J_{11}^2$.
+
+\subsection{Discrete $L^2$ error}
+It is possible to calculate the $L^2$ error of the solution approximation $v$ compared to an analytical solution or some other approximation, $u$ via:
+\be ||u-v||_2 = \sqrt{\int (u-v)^2 \; dx} \ee
+A discrete version needs to perform numerical quadrature to calculate the integral of the error. In situations where the calculated error is obtainable at the solution points, we have ready-made quadrature points that we can collocate such that we obtain the discrete form:
+\be ||u-v||_2 = \sqrt{[w_i]^T(u_{ij}-v_{ij})^2[w_j]} \ee
+where $w_i$ and $w_j$ are the appropriate quadrature weights associated with each direction of the tensor product of quadrature points, and $u_{ij}$ and $v_{ij}$ are the values at the interpolation nodes. If two tests do not share a common set of solution points, we interpolate the results to a shared set of equispaced points and calculate the error by:
+\be ||u-v|| =\sqrt{\frac{1}{M\times N} \sum_{i=1}^M \sum_{j=1}^N (u_{ij}-v_{ij})^2 }\ee
 
 %============================================================
 \section{Results}
@@ -196,6 +286,9 @@ a nifty comparison.
   \end{tabular}
  \end{center}
 \end{table}
+
+%============================================================
+\section{Validation}
 
 %============================================================
 \section{Conclusion}
