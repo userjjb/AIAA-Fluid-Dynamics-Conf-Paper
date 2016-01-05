@@ -257,8 +257,8 @@ The recent thesis work of Atcheson \cite{Reid} presents a comprehensive overview
 %============================================================
 \section{Results}
 
-\subsection{Perlmann: Stationary Vortex}
-Perlmann's 7th order polynomial  \cite{Perlmann1985} was the first case studied. The intial condition is a stationary vortex that permits an analytical solution to compare against. The initial vorticity distribution is of the form:
+\subsection{Perlman: Stationary Vortex}
+Perlman's 7th order polynomial  \cite{Perlman1985} was the first case studied. The intial condition is a stationary vortex that permits an analytical solution to compare against. The initial vorticity distribution is of the form:
 \ben{PerlW} \omega(z)=(1-|z|^2)^7, \; |z|\leq 1  \quad \omega(z)=0, \;|z|>1 \quad z^2=x^2+y^2 \ee
 and the corresponding velocity field is:
 \ben{PerlU} u(z,t)=f(|z|)\binom{y}{-x} \ee
@@ -279,7 +279,7 @@ The results confirm the expectation that too small or large a cutoff radius is d
 \begin{figure}
 \centering
 \includegraphics[width=1\textwidth]{CutoffWU.PNG}
-\caption{\label{fig:CutoffWU}Comparison of convergence effects on vorticity and velocity by kernel cutoff radius for $\delta/\Delta x$=0.1($\cdot \cdot \cdot$), 0.2(--{ }--), 0.3(---), 0.5(--\,$\cdot$\,--), 0.9(--\!$\ominus$\!--);  Perlmann vortex, sixth order method.}
+\caption{\label{fig:CutoffWU}Comparison of convergence effects on vorticity and velocity by kernel cutoff radius for $\delta/\Delta x$=0.1($\cdot \cdot \cdot$), 0.2(--{ }--), 0.3(---), 0.5(--\,$\cdot$\,--), 0.9(--\!$\ominus$\!--);  Perlman vortex, sixth order method.}
 \end{figure}
 
 \subsubsection{Convergence Rates of Various Orders}
@@ -288,7 +288,7 @@ A 3rd through 6th order method was used to measure convergence rate for various 
 \begin{wrapfigure}{R}{.52\textwidth}
 \centering
 \includegraphics[width=0.52\textwidth]{PorderR.PNG}
-\caption{\label{fig:Porder}Comparison of convergence rate for various order methods: 3rd(--\,$\cdot$\,--), 4th($\cdot \cdot \cdot$), 5th(--{ }--), and 6th(---), Perlmann vortex.}
+\caption{\label{fig:Porder}Comparison of convergence rate for various order methods: 3rd(--\,$\cdot$\,--), 4th($\cdot \cdot \cdot$), 5th(--{ }--), and 6th(---), Perlman vortex.}
 \end{wrapfigure}
 
 \subsubsection{Invariance of Conserved Quantities}\label{PConserveW}
@@ -297,7 +297,7 @@ One of the main advantages of the velocity-vorticity form is explicit conservati
 \begin{figure}
 \centering
 \includegraphics[width=1\textwidth]{PW_LinImpconserve.png}
-\caption{\label{fig:PW_LinImpconserve}Conservation of total vorticity (left) and linear impulse (right), Perlmann test case, sixth order method with K$\times$K elements K= 3((--\!$\ominus$\!--), 4(--\,$\cdot$\,--), 5($\cdot \cdot \cdot$), 6(--{ }--), and 7(---).}
+\caption{\label{fig:PW_LinImpconserve}Conservation of total vorticity (left) and linear impulse (right), Perlman test case, sixth order method with K$\times$K elements K= 3((--\!$\ominus$\!--), 4(--\,$\cdot$\,--), 5($\cdot \cdot \cdot$), 6(--{ }--), and 7(---).}
 \end{figure}
 
 %---------
@@ -332,7 +332,7 @@ Figure \ref{fig:StrainComp} provides a qualitative comparison of a sixth order m
 \subsubsection{Approximated Convergence Rates of Various Orders}\label{SConverge}
 In order to be able to make a quantitative comparison lower degree of freedom solutions were compared against a pseudo-exact solution with far more elements. The error in the higher degree of freedom solution with respect to an exact solution should be dwarfed by the error of the lower degree of freedom solutions. In this case a sixth order 60$\times$60 element solution was used as the comparative solution. A time-step of $\Delta t=0.32$ was chosen to satisfy the CFL condition in all tests allowing the time-step to be kept constant across all tests.
 
-A set of lower element count sixth order runs were performed with two different cutoff radii. There is a striking difference in the convergence properties of each. Early on the smaller cutoff radius run displays superior convergence, but this continually decays over time. The convergence rate is poorer initially for the larger cutoff radius result, but it remains fairly steady at a 3rd order convergence. The convergence rate behavior is to be expected given the results of the Perlmann cutoff radius tests. The larger cutoff radius lowers the convergence rate of the calculated velocity field (and therefore the overall method), but the accumulated quadrature error over time is much smaller, enough that the convergence rate is relatively steady.
+A set of lower element count sixth order runs were performed with two different cutoff radii. There is a striking difference in the convergence properties of each. Early on the smaller cutoff radius run displays superior convergence, but this continually decays over time. The convergence rate is poorer initially for the larger cutoff radius result, but it remains fairly steady at a 3rd order convergence. The convergence rate behavior is to be expected given the results of the Perlman cutoff radius tests. The larger cutoff radius lowers the convergence rate of the calculated velocity field (and therefore the overall method), but the accumulated quadrature error over time is much smaller, enough that the convergence rate is relatively steady.
 
 \begin{wrapfigure}{R}{.5\textwidth}
 \centering
@@ -375,7 +375,7 @@ Figure \ref{fig:AspectRatio} compares the evolution of the two effective aspect 
 \centering
 \includegraphics[width=1\textwidth]{AspectRatio.PNG}
 \caption{\label{fig:AspectRatio}Comparison of effective aspect ratio, Koumoutsakos \cite{Koum1997} (top) and present method (bottom). Reprinted with permission \cite{KoumLic}.}
-\end{figure}
+\end{figure}\\
 
 %============================================================
 \section{Conclusion}
@@ -448,7 +448,7 @@ Atcheson, T., \textit{Explicit Discontinuous Galerkin Methods for Linear Hyperbo
 Niegemann, J., Diehl R., and Busch K., "Efficient low-storage Runge–Kutta schemes with optimized stability regions," \textit{J. Comput. Phys.}, Vol. 231, No. 2, 2012, pp. 364-372.
 
 %Test cases
-\bibitem{Perlmann1985}
+\bibitem{Perlman1985}
 Perlman M., "On the accuracy of vortex methods," \textit{J. Comput. Phys.}, Vol. 59, 1985, pp. 200–223.
 \bibitem{Strain1996}
 Strain J., "2D vortex methods and singular quadrature rules," \textit{J. Comput. Phys.}, Vol. 124, No. 1, 1996, pp. 131-145.
