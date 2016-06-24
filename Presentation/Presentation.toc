@@ -1,0 +1,41 @@
+\beamer@endinputifotherversion {3.36pt}
+\select@language {english}
+\beamer@sectionintoc {1}{Abstract}{2}{0}{1}
+\beamer@sectionintoc {2}{Introduction}{3}{0}{2}
+\beamer@subsectionintoc {2}{1}{Presentation Structure}{3}{0}{2}
+\beamer@subsectionintoc {2}{2}{Goals of Technique}{4}{0}{2}
+\beamer@subsectionintoc {2}{3}{Motivation}{5}{0}{2}
+\beamer@subsectionintoc {2}{4}{Proposed Method}{6}{0}{2}
+\beamer@sectionintoc {3}{Theory}{7}{0}{3}
+\beamer@subsectionintoc {3}{1}{Navier-Stokes: Velocity-vorticity form}{7}{0}{3}
+\beamer@subsectionintoc {3}{2}{Velocity-vorticity form}{8}{0}{3}
+\beamer@subsectionintoc {3}{3}{Velocity Evaluation}{9}{0}{3}
+\beamer@subsectionintoc {3}{4}{Kernel De-singularization: Two Viewpoints}{10}{0}{3}
+\beamer@subsectionintoc {3}{5}{Convergence of Biot-Savart Integral}{11}{0}{3}
+\beamer@subsectionintoc {3}{6}{Discontinuous Galerkin (DG)}{12}{0}{3}
+\beamer@subsectionintoc {3}{7}{Solver Overview}{15}{0}{3}
+\beamer@sectionintoc {4}{Methodology}{16}{0}{4}
+\beamer@subsectionintoc {4}{1}{Method Specific Choices}{16}{0}{4}
+\beamer@subsectionintoc {4}{2}{Flux Interpolation and Modified Quadrature}{18}{0}{4}
+\beamer@subsectionintoc {4}{3}{Modified Quadrature Advantages}{19}{0}{4}
+\beamer@sectionintoc {5}{Implementation}{20}{0}{5}
+\beamer@subsectionintoc {5}{1}{Structured Tensor Mesh}{20}{0}{5}
+\beamer@subsectionintoc {5}{2}{Mass Matrix}{21}{0}{5}
+\beamer@subsectionintoc {5}{3}{Stiffness Matrix}{22}{0}{5}
+\beamer@subsectionintoc {5}{4}{Velocity Evaluation}{24}{0}{5}
+\beamer@subsectionintoc {5}{5}{Kernel value calculations}{25}{0}{5}
+\beamer@subsectionintoc {5}{6}{Explicit Time-Stepping}{26}{0}{5}
+\beamer@sectionintoc {6}{Results}{27}{0}{6}
+\beamer@subsectionintoc {6}{1}{Validating Test Cases}{27}{0}{6}
+\beamer@subsectionintoc {6}{2}{Comparison of Cutoff Radius Effects(P)}{28}{0}{6}
+\beamer@subsectionintoc {6}{3}{Observed Convergence Rate of Various Orders(P)}{30}{0}{6}
+\beamer@subsectionintoc {6}{4}{Approximated Convergence Rate(S)}{32}{0}{6}
+\beamer@subsectionintoc {6}{5}{Qualitative Comparison of Vorticity(S)}{35}{0}{6}
+\beamer@subsectionintoc {6}{6}{Qualitative Comparison of Vorticity(K)}{36}{0}{6}
+\beamer@subsectionintoc {6}{7}{Comparison of Aspect Ratio(K)}{39}{0}{6}
+\beamer@sectionintoc {7}{Discussion}{40}{0}{7}
+\beamer@subsectionintoc {7}{1}{Validation}{40}{0}{7}
+\beamer@subsectionintoc {7}{2}{Convergence Rate}{41}{0}{7}
+\beamer@subsectionintoc {7}{3}{Exact Biot-Savart Integration}{42}{0}{7}
+\beamer@subsectionintoc {7}{4}{Exact B-S Integr.: Modified Kernel Values}{43}{0}{7}
+\beamer@sectionintoc {8}{Conclusion}{45}{0}{8}

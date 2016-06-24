@@ -1,0 +1,39 @@
+\BOOKMARK [2][]{Outline0.1}{Abstract}{}% 1
+\BOOKMARK [2][]{Outline0.2}{Introduction}{}% 2
+\BOOKMARK [3][]{Outline0.2.1.3}{Presentation Structure}{Outline0.2}% 3
+\BOOKMARK [3][]{Outline0.2.2.4}{Goals of Technique}{Outline0.2}% 4
+\BOOKMARK [3][]{Outline0.2.3.5}{Motivation}{Outline0.2}% 5
+\BOOKMARK [3][]{Outline0.2.4.6}{Proposed Method}{Outline0.2}% 6
+\BOOKMARK [2][]{Outline0.3}{Theory}{}% 7
+\BOOKMARK [3][]{Outline0.3.1.7}{Navier-Stokes: Velocity-vorticity form}{Outline0.3}% 8
+\BOOKMARK [3][]{Outline0.3.2.8}{Velocity-vorticity form}{Outline0.3}% 9
+\BOOKMARK [3][]{Outline0.3.3.9}{Velocity Evaluation}{Outline0.3}% 10
+\BOOKMARK [3][]{Outline0.3.4.10}{Kernel De-singularization: Two Viewpoints}{Outline0.3}% 11
+\BOOKMARK [3][]{Outline0.3.5.11}{Convergence of Biot-Savart Integral}{Outline0.3}% 12
+\BOOKMARK [3][]{Outline0.3.6.12}{Discontinuous Galerkin \(DG\)}{Outline0.3}% 13
+\BOOKMARK [3][]{Outline0.3.7.15}{Solver Overview}{Outline0.3}% 14
+\BOOKMARK [2][]{Outline0.4}{Methodology}{}% 15
+\BOOKMARK [3][]{Outline0.4.1.16}{Method Specific Choices}{Outline0.4}% 16
+\BOOKMARK [3][]{Outline0.4.2.18}{Flux Interpolation and Modified Quadrature}{Outline0.4}% 17
+\BOOKMARK [3][]{Outline0.4.3.19}{Modified Quadrature Advantages}{Outline0.4}% 18
+\BOOKMARK [2][]{Outline0.5}{Implementation}{}% 19
+\BOOKMARK [3][]{Outline0.5.1.20}{Structured Tensor Mesh}{Outline0.5}% 20
+\BOOKMARK [3][]{Outline0.5.2.21}{Mass Matrix}{Outline0.5}% 21
+\BOOKMARK [3][]{Outline0.5.3.22}{Stiffness Matrix}{Outline0.5}% 22
+\BOOKMARK [3][]{Outline0.5.4.24}{Velocity Evaluation}{Outline0.5}% 23
+\BOOKMARK [3][]{Outline0.5.5.25}{Kernel value calculations}{Outline0.5}% 24
+\BOOKMARK [3][]{Outline0.5.6.26}{Explicit Time-Stepping}{Outline0.5}% 25
+\BOOKMARK [2][]{Outline0.6}{Results}{}% 26
+\BOOKMARK [3][]{Outline0.6.1.27}{Validating Test Cases}{Outline0.6}% 27
+\BOOKMARK [3][]{Outline0.6.2.28}{Comparison of Cutoff Radius Effects\(P\)}{Outline0.6}% 28
+\BOOKMARK [3][]{Outline0.6.3.30}{Observed Convergence Rate of Various Orders\(P\)}{Outline0.6}% 29
+\BOOKMARK [3][]{Outline0.6.4.32}{Approximated Convergence Rate\(S\)}{Outline0.6}% 30
+\BOOKMARK [3][]{Outline0.6.5.35}{Qualitative Comparison of Vorticity\(S\)}{Outline0.6}% 31
+\BOOKMARK [3][]{Outline0.6.6.36}{Qualitative Comparison of Vorticity\(K\)}{Outline0.6}% 32
+\BOOKMARK [3][]{Outline0.6.7.39}{Comparison of Aspect Ratio\(K\)}{Outline0.6}% 33
+\BOOKMARK [2][]{Outline0.7}{Discussion}{}% 34
+\BOOKMARK [3][]{Outline0.7.1.40}{Validation}{Outline0.7}% 35
+\BOOKMARK [3][]{Outline0.7.2.41}{Convergence Rate}{Outline0.7}% 36
+\BOOKMARK [3][]{Outline0.7.3.42}{Exact Biot-Savart Integration}{Outline0.7}% 37
+\BOOKMARK [3][]{Outline0.7.4.43}{Exact B-S Integr.: Modified Kernel Values}{Outline0.7}% 38
+\BOOKMARK [2][]{Outline0.8}{Conclusion}{}% 39

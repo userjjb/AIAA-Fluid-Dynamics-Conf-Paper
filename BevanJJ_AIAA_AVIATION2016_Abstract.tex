@@ -325,7 +325,7 @@ Although an analytical solution does not exist for the given vortex system, we s
 Figure \ref{fig:StrainComp} provides a qualitative comparison of a sixth order method solution with Strain's results at t=28. The two sets of results agree very well. Notably, the solution from the current method with only approximately 3000 degrees of freedom replicates quite well Strain's result where N=25600. In all convergence test cases vorticity was conserved to within 0.03\% and linear impulse to within 2E-5.
 \begin{figure}[t]
 \centering
-\includegraphics[width=1\textwidth]{StrainCompR.PNG}
+\includegraphics[width=1\textwidth]{StrainCompRmod.PNG}
 \caption{\label{fig:StrainComp}Comparison of Strain \cite{Strain1996} (left) with present method (right) t=28. Left to right, top to bottom: DOF= 6400, 12800, 25600; 3136, 7056, 63504. Contour interval for right column specified in \S\ref{SComp}. Reprinted with permission \cite{StrainLic}. }
 \end{figure}
 
@@ -376,6 +376,38 @@ Figure \ref{fig:AspectRatio} compares the evolution of the two effective aspect 
 \includegraphics[width=1\textwidth]{AspectRatio.PNG}
 \caption{\label{fig:AspectRatio}Comparison of effective aspect ratio, Koumoutsakos \cite{Koum1997} (top) and present method (bottom). Reprinted with permission \cite{KoumLic}.}
 \end{figure}\\
+
+%============================================================
+\section{Pending Improvements: Exact Biot-Savart Evaluation via Modified Kernel }
+
+Ideally one would exactly integrate the Biot-Savart kernel, removing both the quadrature error from poor convergence for a nearly-singular kernel and the approximation error in de-singularizing the kernel. For example, should one wish to calculate the y-velocity at a target point $T_x$ the following must be evaluated:
+\be u_y(T_x) = \int \int \frac{\mathbf{x}-T_x}{2\pi r^2} \omega(\mathbf{x}) d\mathbf{x} \ee
+where the vorticity, $\omega$, is actually a Lagrange interpolation. Thus:
+\be u_y(T_x) = \frac{1}{2 \pi} \sum_i \sum_j z_{ij} \int \int \frac{x-T_x}{r^2} \; \ell_i(x) \ell_j(y) \;dx \;dy\ee
+ehre $z_{ij}$ is the value of the vorticity interpolation at the $i,j$ node.
+
+Notably the variable portion of the interpolation, the interpolatory values, occur outside of the integral since the interpolation is a linear combination of each of the Lagrange bases. This permits pre-calculation and storage of the integral values by an accurate method of choice without worrying about its impact on the runtime performance of the actual simulation. With a method of suitable accuracy to calculate these integrals the runtime calculation of the velocity can be made to agree to within machine precision of the exact value. The storage and use of pre-calculated values yields a modified numerical quadrature routine with special weights of the form:
+
+\be u(T_-)= \frac{1}{2 \pi} \sum_i \sum_j z_{ij} W_{(-, T_x,T_y,i,j)} \ee
+where the special weights range over each coordinate direction, target evaluation positions, and source interpolation point positions respectively.
+
+One important consideration is what is the spatial variance of these special weights with respect to the source interpolation points. To examine this heuristically one may divide the special quadrature weights by the standard weights obtained from the tensor product of the Gauss-Legendre interpolation points used. For simplicity consider this case for a single target point and velocity in the x-direction:
+\be u_x= \frac{1}{2 \pi} \sum_i \sum_j z_{ij} \frac{W_{(i,j)}}{W_{GL}} W_{GL} \ee
+where we have denoted the outer product of the Gauss-Legendre quadrature weights along each direction as $W_{GL}$.
+
+Note that $z_{ij}$ is only the interpolatory values of the vorticity, it is not linked in any way to the value of the Biot-Savart kernel values which also vary spatially. If the special quadrature weights are able to exactly evaluate the velocity, the factor $\overset{\sim}{k}_{ij} = \frac{W_{(i,j)}}{W_{GL}}$ may be thought of as a modified kernel value at each interpolatory point so that one recovers a more familiar form:
+\be u_x= \frac{1}{2 \pi} \sum_i \sum_j z_{ij}  \overset{\sim}{k}_{ij} W_{GL} \ee
+which is identical to the naive approach of evaluating the Biot-Savart integral with Gauss-Legendre quadrature, however it is able to exactly evaluate the integral thanks to the modified kernel values.
+
+Now that we have recovered a set of modified kernel values we can examine their spatial variance. Figure \ref{fig:KernelModComp} plots the relative variance of the modified kernel values with respect to the traditional Biot-Savart kernel values for a 6th order method with a target point at the center of an element across the ``self'' element and the adjacent elements along one coordinate direction. Within the self element there is significant difference between the two sets of kernel values, however this decays as one moves farther away from the target point. For elements farther away than this the absolute difference between the two sets of kernel values differs to within machine precision.
+
+This presents several fortunate consequences; one need only pre-calculate modified kernel values for the self and adjacent elements. Additionally, the kernel values need only be modified locally which presents promising opportunity for the application of a Fast Multipole Method. This exact Biot-Savart evaluation technique is currently in development for use in the current overall solution method and it is expected that with proper application significant gains in the overall convergence of the method will be realized.
+
+\begin{figure}
+\centering
+\includegraphics[width=.6\textwidth]{KernelModComp.PNG}
+\caption{\label{fig:KernelModComp}Spatial variance of modified Biot-Savart kernels compared to that of tradition kernel values along a coordinate direction for a particular target point at the center of an element for a 6th order interpolation scheme}
+\end{figure}
 
 %============================================================
 \section{Conclusion}
